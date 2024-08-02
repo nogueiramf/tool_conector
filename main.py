@@ -29,7 +29,6 @@ class ReviewFetcherTool(BaseTool):
         """
         # Obter a URI do MongoDB a partir da variável de ambiente
         mongo_uri = os.getenv('MONGO_URI')
-        print(f"Mongo URI: {mongo_uri}")
         if not mongo_uri:
             return "Environment variable 'MONGO_URI' not set."
 
@@ -37,7 +36,6 @@ class ReviewFetcherTool(BaseTool):
         try:
             with open('config/consulta.yaml', 'r') as file:
                 consulta = yaml.safe_load(file)
-                print(f"Consulta carregada: {consulta}")
         except FileNotFoundError:
             return "consulta.yaml file not found in config directory."
         except yaml.YAMLError as e:
@@ -52,8 +50,6 @@ class ReviewFetcherTool(BaseTool):
         if not app_id or not store or not lang or not start_date_str or not end_date_str:
             return "Missing query parameters in consulta.yaml."
 
-        print(f"Parâmetros da consulta - appId: {app_id}, store: {store}, lang: {lang}, start_date: {start_date_str}, end_date: {end_date_str}")
-
         # Converter strings de datas para objetos datetime
         try:
             start_date = datetime.strptime(start_date_str, '%Y-%m-%dT%H:%M:%SZ')
@@ -66,7 +62,6 @@ class ReviewFetcherTool(BaseTool):
             client = MongoClient(mongo_uri)
             db = client['ReviewsGplay']
             collection = db['reviews']
-            print("Conexão ao MongoDB estabelecida.")
         except Exception as e:
             return f"Error connecting to MongoDB: {e}"
 
@@ -78,11 +73,7 @@ class ReviewFetcherTool(BaseTool):
             "date": {"$gte": start_date, "$lte": end_date}
         }
 
-        print(f"Consulta MongoDB: {query}")
-
         try:
-            count = collection.count_documents(query)
-            print(f"Número de resultados encontrados: {count}")
             results = collection.find(query)
         except Exception as e:
             return f"Error executing query: {e}"
@@ -90,7 +81,6 @@ class ReviewFetcherTool(BaseTool):
         # Converter os resultados para um DataFrame do pandas
         try:
             df = pd.DataFrame(list(results))
-            print(f"DataFrame criado com {len(df)} linhas.")
         except Exception as e:
             return f"Error converting results to DataFrame: {e}"
 
@@ -104,13 +94,11 @@ class ReviewFetcherTool(BaseTool):
         # Exportar para um arquivo CSV
         try:
             df.to_csv(output_file, index=False)
-            print(f"Dados exportados para {output_file}")
         except Exception as e:
             return f"Error exporting to CSV: {e}"
 
         # Fechar a conexão
         client.close()
-        print("Conexão ao MongoDB fechada.")
 
         return f"Reviews fetched and saved to {output_file}"
 
